@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>投放策略计算器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f5f9;
+    --card: #ffffff;
+    --card-alt: #f8f9fc;
+    --card-deep: #f0f1f6;
+    --surface: #eef0f5;
+    --border: #e5e7ef;
+    --border-subtle: #eff1f6;
+    --border-hover: #d0d3e0;
+    --text: #111827;
+    --text-sub: #6b7280;
+    --text-dim: #9ca3af;
+    --primary: #4f46e5;
+    --primary-rgb: 79,70,229;
+    --primary-bg: #eef2ff;
+    --primary-glow: rgba(79,70,229,0.10);
+    --orange: #ea580c;
+    --orange-rgb: 234,88,12;
+    --orange-bg: #fff7ed;
+    --green: #059669;
+    --green-rgb: 5,150,105;
+    --green-bg: #ecfdf5;
+    --green-light: #f0fdf4;
+    --red: #dc2626;
+    --red-rgb: 220,38,38;
+    --red-bg: #fef2f2;
+    --red-light: #fef2f2;
+    --input-bg: #ffffff;
+    --input-hover: #f8f9fc;
+    --result-neutral-bg: #f8f9fc;
+    --r-xs: 6px; --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 20px;
+    --s-xs: 0 1px 2px rgba(0,0,0,0.03);
+    --s-sm: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+    --s-md: 0 2px 8px rgba(0,0,0,0.04), 0 12px 32px rgba(0,0,0,0.06);
+    --s-lg: 0 4px 16px rgba(0,0,0,0.05), 0 20px 48px rgba(0,0,0,0.08);
+    --s-result: 0 2px 6px rgba(0,0,0,0.03), 0 10px 30px rgba(0,0,0,0.06);
+    --pill: 20px; --pill-sm: 15px; --gap: 14px;
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --theme-icon-deg: 0deg;
+  }
+
+  /* ── Dark Mode ── */
+  [data-theme="dark"] {
+    --bg: #0f1117;
+    --card: #1a1b23;
+    --card-alt: #22232e;
+    --card-deep: #191a24;
+    --surface: #16171f;
+    --border: #2d2e3a;
+    --border-subtle: #252636;
+    --border-hover: #3d3e50;
+    --text: #e5e7eb;
+    --text-sub: #9ca3b8;
+    --text-dim: #6b7280;
+    --primary: #818cf8;
+    --primary-rgb: 129,140,248;
+    --primary-bg: rgba(129,140,248,0.12);
+    --primary-glow: rgba(129,140,248,0.15);
+    --orange: #fb923c;
+    --orange-rgb: 251,146,60;
+    --orange-bg: rgba(251,146,60,0.12);
+    --green: #34d399;
+    --green-rgb: 52,211,153;
+    --green-bg: rgba(52,211,153,0.10);
+    --green-light: rgba(52,211,153,0.06);
+    --red: #f87171;
+    --red-rgb: 248,113,113;
+    --red-bg: rgba(248,113,113,0.10);
+    --red-light: rgba(248,113,113,0.06);
+    --input-bg: #22232e;
+    --input-hover: #2a2b38;
+    --result-neutral-bg: #22232e;
+    --s-xs: 0 1px 2px rgba(0,0,0,0.15);
+    --s-sm: 0 1px 3px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.10);
+    --s-md: 0 2px 8px rgba(0,0,0,0.15), 0 12px 32px rgba(0,0,0,0.12);
+    --s-lg: 0 4px 16px rgba(0,0,0,0.15), 0 20px 48px rgba(0,0,0,0.15);
+    --s-result: 0 2px 6px rgba(0,0,0,0.10), 0 10px 30px rgba(0,0,0,0.12);
+    --theme-icon-deg: 180deg;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--text);min-height:100vh;padding:32px 24px;
+    -webkit-font-smoothing:antialiased;font-size:15px;line-height:1.5;
+    transition:background .3s var(--ease),color .3s var(--ease);
+  }
+  .container{max-width:1200px;margin:0 auto}
+
+  /* ── Page Header ── */
+  .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+  h1{font-size:24px;font-weight:700;letter-spacing:-0.5px;color:var(--text)}
+  .header-actions{display:flex;align-items:center;gap:8px}
+  .btn-theme{
+    width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--card);
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:all .15s var(--ease);box-shadow:var(--s-xs);color:var(--text-sub);
+    position:relative;overflow:hidden;
+  }
+  .btn-theme:hover{border-color:var(--border-hover);box-shadow:var(--s-sm);color:var(--text)}
+  .btn-theme:active{transform:scale(0.92);box-shadow:var(--s-xs)}
+  .btn-theme svg{
+    width:18px;height:18px;transition:transform .3s var(--ease),opacity .2s var(--ease);
+    transform:rotate(var(--theme-icon-deg));
+  }
+  .btn-reset-all{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--pill-sm);
+    padding:7px 20px;font-size:13px;color:var(--text-sub);cursor:pointer;
+    transition:all .15s var(--ease);font-weight:500;font-family:inherit;
+    box-shadow:var(--s-xs);
+  }
+  .btn-reset-all:hover{border-color:var(--border-hover);color:var(--text);box-shadow:var(--s-sm)}
+  .btn-reset-all:active{transform:scale(0.96);box-shadow:var(--s-xs);filter:brightness(0.95)}
+  .btn-reset-all.resetting{background:var(--primary-bg);border-color:rgba(var(--primary-rgb),.25);color:var(--primary)}
+
+  /* ── Two-column Grid ── */
+  .cards-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);align-items:start}
+
+  /* ── Card ── */
+  .card{
+    background:var(--card);border-radius:var(--r-lg);border:1px solid var(--border);
+    box-shadow:var(--s-sm);overflow:hidden;min-width:0;
+    transition:box-shadow .25s var(--ease),border-color .25s var(--ease),transform .25s var(--ease),background .3s var(--ease);
+    position:relative;
+  }
+  .card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    border-radius:var(--r-lg) var(--r-lg) 0 0;
+  }
+  .card:first-child::before{background:linear-gradient(90deg,var(--primary),rgba(var(--primary-rgb),.3))}
+  .card:last-child::before{background:linear-gradient(90deg,var(--orange),rgba(var(--orange-rgb),.3))}
+  .card:hover{box-shadow:var(--s-md);border-color:var(--border-hover);transform:translateY(-1px)}
+
+  /* ── Card Header ── */
+  .card-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 20px;border-bottom:1px solid var(--border-subtle);
+    background:linear-gradient(180deg,var(--card-deep) 0%,var(--card-alt) 100%);
+    transition:background .3s var(--ease),border-color .3s var(--ease);
+  }
+  .card-header-left{display:flex;align-items:center;gap:10px}
+  .card-title{font-size:17px;font-weight:600;color:var(--text);letter-spacing:-0.3px;transition:color .3s var(--ease)}
+  .card-badge{
+    font-size:11px;padding:2px 10px;border-radius:var(--pill);font-weight:600;letter-spacing:.2px;
+    transition:background .3s var(--ease),color .3s var(--ease);
+  }
+  .badge-blue{background:var(--primary-bg);color:var(--primary)}
+  .badge-orange{background:var(--orange-bg);color:var(--orange)}
+  .btn-reset{
+    background:transparent;border:1px solid var(--border);border-radius:var(--pill-sm);
+    padding:4px 14px;font-size:13px;color:var(--text-sub);cursor:pointer;
+    transition:all .15s var(--ease);font-weight:500;font-family:inherit;
+  }
+  .btn-reset:hover{border-color:var(--border-hover);color:var(--text)}
+  .btn-reset:active{transform:scale(0.96);filter:brightness(0.95)}
+  .btn-reset.resetting{background:var(--primary-bg);border-color:rgba(var(--primary-rgb),.25);color:var(--primary)}
+
+  /* ── Card Body ── */
+  .card-body{padding:18px 20px 22px;overflow:visible;transition:background .3s var(--ease)}
+
+  /* ── Formula Section ── */
+  .formula-section{
+    background:var(--card-alt);border-radius:var(--r-md);padding:10px 16px;margin-bottom:var(--gap);
+    overflow:visible;border-left:3px solid var(--border);
+    transition:background .3s var(--ease),border-color .3s var(--ease);
+  }
+  .card:first-child .formula-section{border-left-color:rgba(var(--primary-rgb),.35)}
+  .card:last-child .formula-section{border-left-color:rgba(var(--orange-rgb),.35)}
+  .formula-desc{
+    font-size:13px;color:var(--text-sub);line-height:1.6;font-weight:600;white-space:normal;
+    transition:color .3s var(--ease);
+  }
+  .formula-desc .fd-op{color:var(--text-dim);font-weight:400}
+
+  /* ── Threshold Row ── */
+  .threshold-row{
+    display:flex;align-items:center;gap:8px;padding:10px 16px;
+    background:var(--card-alt);border-radius:var(--r-md);margin-bottom:var(--gap);
+    transition:background .3s var(--ease);
+  }
+  .threshold-label{font-size:12px;color:var(--text-dim);font-weight:500;transition:color .3s var(--ease)}
+  .threshold-toggle{
+    display:grid;grid-template-columns:1fr 1fr;width:116px;
+    border:1px solid var(--border);border-radius:var(--pill-sm);overflow:hidden;
+    transition:border-color .15s var(--ease);
+  }
+  .threshold-toggle-btn{
+    padding:4px 0;font-size:12px;color:var(--text-dim);cursor:pointer;
+    border:none;background:transparent;font-family:inherit;font-weight:500;
+    transition:all .15s var(--ease);outline:none;min-width:0;text-align:center;white-space:nowrap;
+  }
+  .threshold-toggle-btn:hover{color:var(--text-sub)}
+  .threshold-toggle-btn:active{transform:scale(0.96)}
+  .threshold-toggle-btn.active{
+    background:var(--primary-bg);color:var(--primary);font-weight:600;
+  }
+  [data-theme="dark"] .threshold-toggle-btn.active{
+    background:rgba(var(--primary-rgb),0.15);
+  }
+  .threshold-row input[type="number"]{
+    height:30px;width:50px;border:1px solid var(--border);border-radius:var(--pill-sm);
+    padding:0 3px;font-size:13px;font-variant-numeric:tabular-nums;color:var(--text);
+    background:var(--input-bg);outline:none;text-align:center;
+    transition:border-color .15s var(--ease),box-shadow .15s var(--ease),background .3s var(--ease);font-family:inherit;
+  }
+  .threshold-row input[type="number"]::-webkit-inner-spin-button,
+  .threshold-row input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+  .threshold-row input[type="number"]{-moz-appearance:textfield}
+  .threshold-row input[type="number"]:focus{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-glow)}
+  .threshold-row input[readonly]{background:var(--card-alt);color:var(--text-sub);border-style:dashed;cursor:default;box-shadow:none}
+
+  /* ── Fields 2-col ── */
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;margin-bottom:0}
+  .field{display:flex;flex-direction:column;gap:4px;position:relative}
+  .field label{font-size:12px;color:var(--text-sub);font-weight:500;padding-left:4px;transition:color .3s var(--ease)}
+  .field input[type="number"]{
+    height:40px;border:1px solid var(--border);border-radius:var(--pill);
+    padding:0 14px;font-size:15px;font-variant-numeric:tabular-nums;color:var(--text);
+    outline:none;
+    transition:border-color .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease);
+    width:100%;background:var(--input-bg);font-family:inherit;
+  }
+  .field input:hover{border-color:var(--border-hover);background:var(--input-hover)}
+  .field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow);background:var(--input-bg)}
+  .field input::placeholder{color:var(--text-dim);opacity:.5;font-size:13px}
+  .field input::-webkit-inner-spin-button,.field input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+  .field input{-moz-appearance:textfield}
+  .field input.input-error{border-color:var(--red);box-shadow:0 0 0 2px rgba(var(--red-rgb),.1)}
+  .field-error{font-size:10px;color:var(--red);position:absolute;bottom:-14px;left:4px;display:none}
+  .field-error.show{display:block}
+
+  /* ── Result Box ── */
+  .result-box{
+    border-radius:var(--r-md);padding:18px 18px 16px;background:var(--result-neutral-bg);
+    transition:background .3s var(--ease),box-shadow .3s var(--ease),border-color .3s var(--ease);
+    position:relative;overflow:hidden;margin-top:var(--gap);
+    border:1px solid var(--border-subtle);
+  }
+  .result-box::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(0,0,0,0.04),transparent);
+  }
+  [data-theme="dark"] .result-box::before{
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,0.03),transparent);
+  }
+  .result-box.positive{
+    background:linear-gradient(135deg,var(--green-light) 0%,var(--green-bg) 100%);
+    border-color:rgba(var(--green-rgb),.15);
+    box-shadow:inset 0 0 0 1px rgba(var(--green-rgb),.06),var(--s-result);
+  }
+  .result-box.negative{
+    background:linear-gradient(135deg,var(--red-light) 0%,var(--red-bg) 100%);
+    border-color:rgba(var(--red-rgb),.15);
+    box-shadow:inset 0 0 0 1px rgba(var(--red-rgb),.06),var(--s-result);
+  }
+  .result-top{display:flex;align-items:baseline;justify-content:space-between;position:relative;z-index:1}
+  .result-label{font-size:13px;color:var(--text-dim);font-weight:500;transition:color .3s var(--ease)}
+  .result-right{display:flex;align-items:center;gap:10px}
+  .result-value{
+    font-size:32px;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums;
+    letter-spacing:-0.5px;transition:color .3s var(--ease);line-height:1;
+    margin-left:auto;
+  }
+  .result-value.negative{color:var(--red)}
+  .result-value.zero{color:var(--text-dim)}
+  .result-empty{font-size:28px;font-weight:300;color:var(--text-dim);opacity:.3;line-height:1;letter-spacing:6px}
+  .result-box.empty-state{background:var(--card-alt)}
+  .result-box.empty-state::before{opacity:.3}
+  .result-box.empty-state .breakeven-grid,
+  .result-box.empty-state .result-steps{
+    pointer-events:none;
+    transition:opacity .35s var(--ease),filter .35s var(--ease);
+  }
+  .result-box:not(.empty-state) .breakeven-grid,
+  .result-box:not(.empty-state) .result-steps{
+    transition:opacity .35s var(--ease),filter .35s var(--ease);
+  }
+  .result-box.empty-state .btn-copy{opacity:.15!important;pointer-events:none}
+  .result-box.empty-state .result-steps{opacity:1;filter:none}
+  .result-box.empty-state .result-steps .step-label{color:var(--text-dim);opacity:.62}
+  .result-box.empty-state .result-steps .step-expr,
+  .result-box.empty-state .result-steps .step-val{
+    color:transparent;position:relative;min-height:12px;
+  }
+  .result-box.empty-state .result-steps .step-expr::after,
+  .result-box.empty-state .result-steps .step-val::after{
+    content:'';position:absolute;top:50%;right:0;transform:translateY(-50%);
+    height:8px;border-radius:var(--pill);
+    background:var(--border);opacity:.72;
+  }
+  .result-box.empty-state .result-steps .step-expr::after{width:68%}
+  .result-box.empty-state .result-steps .step-val::after{width:42px}
+  .result-box.empty-state .result-steps .step:nth-child(2) .step-expr::after{width:54%}
+  .result-box.empty-state .result-steps .step:nth-child(3) .step-expr::after{width:38%}
+  .result-box.empty-state .result-steps .step:nth-child(4) .step-expr::after{width:58%}
+  [data-theme="dark"] .result-box.empty-state .result-steps .step-expr::after,
+  [data-theme="dark"] .result-box.empty-state .result-steps .step-val::after{background:var(--border-hover);opacity:.55}
+  .btn-copy{
+    background:transparent;border:1px solid currentColor;border-radius:var(--pill-sm);
+    padding:3px 12px;font-size:13px;color:var(--text-dim);cursor:pointer;
+    transition:all .15s var(--ease);font-weight:500;opacity:.4;font-family:inherit;
+    min-width:60px;text-align:center;
+  }
+  .btn-copy:hover{opacity:1;color:var(--primary);border-color:var(--primary)}
+  .btn-copy:active{transform:scale(0.96);filter:brightness(0.95)}
+  .btn-copy.copied{background:var(--green-bg);border-color:rgba(var(--green-rgb),.25);color:var(--green);opacity:1}
+
+  /* ── Breakeven Grid ── */
+  .breakeven-grid{
+    margin-top:10px;display:none;position:relative;z-index:1;
+    background:rgba(var(--primary-rgb),.03);border-radius:var(--r-xs);
+    padding:8px 12px;gap:0;
+  }
+  [data-theme="dark"] .breakeven-grid{background:rgba(var(--primary-rgb),.06)}
+  .breakeven-grid.show{display:grid;grid-template-columns:1fr 1fr;animation:fadeIn .25s var(--ease)}
+  .breakeven-item{text-align:center;padding:5px 10px}
+  .breakeven-item:nth-child(odd){border-right:1px solid var(--border-subtle)}
+  .breakeven-item:nth-child(-n+2){border-bottom:1px solid var(--border-subtle)}
+  .breakeven-item .be-label{font-size:10px;color:var(--text-dim);font-weight:500;margin-bottom:2px;white-space:nowrap}
+  .breakeven-item .be-value{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+  .breakeven-item .be-value.positive{color:var(--green)}
+  .breakeven-item .be-value.negative{color:var(--red)}
+  .breakeven-item .be-hint{font-size:9px;color:var(--text-dim);margin-top:1px;white-space:nowrap}
+
+  /* ── Steps Detail ── */
+  .result-steps{
+    margin-top:12px;padding-top:12px;border-top:1px solid var(--border-subtle);
+    font-size:13px;line-height:1.7;position:relative;z-index:1;
+    transition:border-color .3s var(--ease);
+  }
+  .result-steps .step{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:2px 0}
+  .result-steps .step-label{flex-shrink:0;color:var(--text-sub);font-size:13px;font-weight:500;transition:color .3s var(--ease)}
+  .step-label.label-red{color:var(--red)}
+  .step-label.label-green{color:var(--green)}
+  .result-steps .step-expr{
+    flex:1;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-dim);
+    font-family:"JetBrains Mono","SF Mono",Consolas,monospace;font-size:12px;
+  }
+  .result-steps .step-val{
+    font-weight:600;font-variant-numeric:tabular-nums;min-width:64px;text-align:right;font-size:13px;
+    font-family:"JetBrains Mono","SF Mono",Consolas,monospace;
+  }
+  .step-val.val-green{color:var(--green)}
+  .step-val.val-red{color:var(--red)}
+  .step-val:empty::after{content:''}
+  .result-steps .step-result{border-top:1.5px solid var(--border);padding-top:6px;margin-top:4px}
+  .result-steps .step-result .step-val{font-size:18px}
+  .result-steps .step-result .step-label{color:var(--text);font-weight:600;font-size:13px}
+
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+  /* ── Responsive ── */
+  @media(max-width:900px){
+    body{padding:20px 16px}
+    .cards-row{grid-template-columns:1fr;gap:16px}
+    .container{max-width:none}
+    .fields{grid-template-columns:1fr 1fr;gap:10px}
+    h1{font-size:22px}
+    .result-value{font-size:28px}
+  }
+  @media(max-width:480px){
+    .fields{grid-template-columns:1fr}
+    .result-value{font-size:24px}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="page-header">
+    <h1>投放策略计算器</h1>
+    <div class="header-actions">
+      <button class="btn-theme" onclick="toggleTheme()" title="切换主题" aria-label="切换主题">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      </button>
+      <button class="btn-reset-all" onclick="resetAll()">全部重置</button>
+    </div>
+  </div>
+  <div class="cards-row">
+
+  <!-- 公转私 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <span class="card-title">公转私运价</span>
+        <span class="card-badge badge-blue">公转私</span>
+      </div>
+      <button class="btn-reset" onclick="resetPublic()">重置</button>
+    </div>
+    <div class="card-body">
+      <div class="formula-section" id="pub_formula"></div>
+      <div class="threshold-row">
+        <span class="threshold-label">阀值</span>
+        <div class="threshold-toggle" id="pub_toggle">
+          <button class="threshold-toggle-btn active" onclick="setThreshold('pub','default')">默认</button>
+          <button class="threshold-toggle-btn" onclick="setThreshold('pub','custom')">自定义</button>
+        </div>
+        <input type="number" id="pub_threshold_val" value="50" readonly oninput="calcPublic()">
+        <span class="threshold-label">%</span>
+      </div>
+      <div class="fields" data-card="pub">
+        <div class="field">
+          <label>退改客规</label>
+          <input type="number" id="pub_refund" placeholder="输入金额" step="10" oninput="calcPublic()">
+        </div>
+        <div class="field">
+          <label>公布票面</label>
+          <input type="number" id="pub_cabin_fare" placeholder="输入金额" step="10" oninput="calcPublic()">
+        </div>
+        <div class="field">
+          <label>投放扣率(%)</label>
+          <input type="number" id="pub_invest_rate" placeholder="输入扣率" oninput="calcPublic()">
+        </div>
+        <div class="field">
+          <label>自家扣率(%)</label>
+          <input type="number" id="pub_own_rate" placeholder="输入扣率" oninput="calcPublic()">
+        </div>
+        <div class="field">
+          <label>退改比例(%)</label>
+          <input type="number" id="pub_refund_rate" placeholder="0-100" oninput="validateRR('pub');calcPublic()">
+          <span class="field-error" id="pub_rr_error">请输入0-100的正数</span>
+        </div>
+        <div class="field">
+          <label>留钱</label>
+          <input type="number" id="pub_keep" placeholder="正=赚 负=亏" oninput="calcPublic()">
+        </div>
+      </div>
+      <div class="result-box neutral" id="pub_result_box">
+        <div class="result-top">
+          <span class="result-label">计算结果</span>
+          <div class="result-right">
+            <button class="btn-copy" id="pub_copy_btn" onclick="copyResult('pub', this)">复制</button>
+            <span class="result-empty" id="pub_result_empty">—</span>
+            <span class="result-value zero" id="pub_result" style="display:none">0.00</span>
+          </div>
+        </div>
+        <div class="breakeven-grid" id="pub_breakeven">
+          <div class="breakeven-item"><div class="be-label">退改比例盈亏点</div><div class="be-value" id="pub_be_rr_val">—</div><div class="be-hint" id="pub_be_rr_hint"></div></div>
+          <div class="breakeven-item"><div class="be-label">阀值盈亏点</div><div class="be-value" id="pub_be_th_val">—</div><div class="be-hint" id="pub_be_th_hint"></div></div>
+          <div class="breakeven-item"><div class="be-label">投放扣率盈亏点</div><div class="be-value" id="pub_be_iv_val">—</div><div class="be-hint" id="pub_be_iv_hint"></div></div>
+          <div class="breakeven-item"><div class="be-label">留钱盈亏点</div><div class="be-value" id="pub_be_kp_val">—</div><div class="be-hint" id="pub_be_kp_hint"></div></div>
+        </div>
+        <div class="result-steps" id="pub_detail"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 私有 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <span class="card-title">私有运价</span>
+        <span class="card-badge badge-orange">私有</span>
+      </div>
+      <button class="btn-reset" onclick="resetPrivate()">重置</button>
+    </div>
+    <div class="card-body">
+      <div class="formula-section" id="pri_formula"></div>
+      <div class="threshold-row">
+        <span class="threshold-label">阀值</span>
+        <div class="threshold-toggle" id="pri_toggle">
+          <button class="threshold-toggle-btn active" onclick="setThreshold('pri','default')">默认</button>
+          <button class="threshold-toggle-btn" onclick="setThreshold('pri','custom')">自定义</button>
+        </div>
+        <input type="number" id="pri_threshold_val" value="60" readonly oninput="calcPrivate()">
+        <span class="threshold-label">%</span>
+      </div>
+      <div class="fields" data-card="pri">
+        <div class="field">
+          <label>公布票面</label>
+          <input type="number" id="pri_fare" placeholder="输入金额" step="10" oninput="calcPrivate()">
+        </div>
+        <div class="field">
+          <label>对应公布票面</label>
+          <input type="number" id="pri_cabin_fare" placeholder="输入金额" step="10" oninput="calcPrivate()">
+        </div>
+        <div class="field">
+          <label>投放扣率(%)</label>
+          <input type="number" id="pri_invest_rate" placeholder="输入扣率" oninput="calcPrivate()">
+        </div>
+        <div class="field">
+          <label>自家扣率(%)</label>
+          <input type="number" id="pri_own_rate" placeholder="输入扣率" oninput="calcPrivate()">
+        </div>
+        <div class="field">
+          <label>退改比例(%)</label>
+          <input type="number" id="pri_refund_rate" placeholder="0-100" oninput="validateRR('pri');calcPrivate()">
+          <span class="field-error" id="pri_rr_error">请输入0-100的正数</span>
+        </div>
+        <div class="field">
+          <label>留钱</label>
+          <input type="number" id="pri_keep" placeholder="正=赚 负=亏" oninput="calcPrivate()">
+        </div>
+      </div>
+      <div class="result-box neutral" id="pri_result_box">
+        <div class="result-top">
+          <span class="result-label">计算结果</span>
+          <div class="result-right">
+            <button class="btn-copy" id="pri_copy_btn" onclick="copyResult('pri', this)">复制</button>
+            <span class="result-empty" id="pri_result_empty">—</span>
+            <span class="result-value zero" id="pri_result" style="display:none">0.00</span>
+          </div>
+        </div>
+        <div class="breakeven-grid" id="pri_breakeven">
+          <div class="breakeven-item"><div class="be-label">退改比例盈亏点</div><div class="be-value" id="pri_be_rr_val">—</div><div class="be-hint" id="pri_be_rr_hint"></div></div>
+          <div class="breakeven-item"><div class="be-label">阀值盈亏点</div><div class="be-value" id="pri_be_th_val">—</div><div class="be-hint" id="pri_be_th_hint"></div></div>
+          <div class="breakeven-item"><div class="be-label">投放扣率盈亏点</div><div class="be-value" id="pri_be_iv_val">—</div><div class="be-hint" id="pri_be_iv_hint"></div></div>
+          <div class="breakeven-item"><div class="be-label">留钱盈亏点</div><div class="be-value" id="pri_be_kp_val">—</div><div class="be-hint" id="pri_be_kp_hint"></div></div>
+        </div>
+        <div class="result-steps" id="pri_detail"></div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+</div>
+
+<script>
+/* ── Theme ── */
+function getPreferredTheme(){
+  const stored=localStorage.getItem('theme');
+  if(stored)return stored;
+  return window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+}
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme',theme);
+  localStorage.setItem('theme',theme);
+}
+function toggleTheme(){
+  const current=document.documentElement.getAttribute('data-theme')||'light';
+  applyTheme(current==='dark'?'light':'dark');
+}
+applyTheme(getPreferredTheme());
+
+/* ── Calc Logic ── */
+function getVal(id){const v=parseFloat(document.getElementById(id).value);return isNaN(v)?0:v}
+function hasVal(id){return document.getElementById(id).value.trim()!==''}
+function anyFilled(prefix){
+  const ids=prefix==='pub'
+    ?['pub_refund','pub_refund_rate','pub_cabin_fare','pub_invest_rate','pub_own_rate','pub_keep']
+    :['pri_fare','pri_refund_rate','pri_cabin_fare','pri_invest_rate','pri_own_rate','pri_keep'];
+  return ids.some(hasVal);
+}
+function fmt(n){return n.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fmtR(n){return n%1===0?n:n.toFixed(2)}
+function fmtS(n){return fmt(n)}
+
+function validateRR(prefix){
+  const input=document.getElementById(prefix+'_refund_rate');
+  const error=document.getElementById(prefix+'_rr_error');
+  const v=parseFloat(input.value);
+  if(input.value.trim()!==''&&(isNaN(v)||v<0||v>100)){input.classList.add('input-error');error.classList.add('show')}
+  else{input.classList.remove('input-error');error.classList.remove('show')}
+}
+
+function renderFormula(prefix,baseLabel,cabinLabel){
+  cabinLabel=cabinLabel||'公布票面';
+  document.getElementById(prefix+'_formula').innerHTML=
+    `<div class="formula-desc">`+
+    `${baseLabel} <span class="fd-op">*</span> 阀值 <span class="fd-op">−</span> [${cabinLabel} <span class="fd-op">×</span> (投放扣率 <span class="fd-op">−</span> 自家扣率) <span class="fd-op">+</span> 留钱] <span class="fd-op">×</span> 非退改系数`+
+    `</div>`;
+}
+
+function computeResult(base,threshold,cabinFare,investRate,ownRate,keep,rr){
+  const ratio=rr>0?(100-rr)/rr:0;
+  const profit=base*threshold;
+  const perLoss=cabinFare*(investRate-ownRate)-keep;
+  const totalLoss=perLoss*ratio;
+  const result=profit-totalLoss;
+  return{profit,perLoss,totalLoss,result,ratio};
+}
+
+function resultClass(r){return r<-0.005?'result-value negative':r>0.005?'result-value':'result-value zero'}
+function resultBoxClass(r){return r<-0.005?'result-box negative':r>0.005?'result-box positive':'result-box neutral'}
+function lossClass(n){return n>0.005?'step-val val-red':n<-0.005?'step-val val-green':'step-val'}
+
+const DEFAULT_THRESHOLD={pub:50,pri:60};
+function setThreshold(prefix,type){
+  const toggle=document.getElementById(prefix+'_toggle');
+  const btns=toggle.querySelectorAll('.threshold-toggle-btn');
+  btns.forEach(b=>b.classList.remove('active'));
+  if(type==='default'){
+    btns[0].classList.add('active');
+    const input=document.getElementById(prefix+'_threshold_val');
+    input.readOnly=true;input.value=DEFAULT_THRESHOLD[prefix];
+  }else{
+    btns[1].classList.add('active');
+    const input=document.getElementById(prefix+'_threshold_val');
+    input.readOnly=false;input.value='';input.focus();
+  }
+  if(prefix==='pub')calcPublic();else calcPrivate();
+}
+function getThreshold(prefix){return getVal(prefix+'_threshold_val')}
+
+function showResult(prefix,hasData){
+  document.getElementById(prefix+'_result_empty').style.display=hasData?'none':'';
+  document.getElementById(prefix+'_result').style.display=hasData?'':'none';
+  const box=document.getElementById(prefix+'_result_box');
+  box.classList.toggle('empty-state',!hasData);
+  const copyBtn=document.getElementById(prefix+'_copy_btn');
+  copyBtn.disabled=!hasData;copyBtn.style.opacity=hasData?'':'0.3';copyBtn.style.pointerEvents=hasData?'':'none';
+}
+
+function updateBreakeven(prefix,base,threshold,perLoss,totalLoss,result,ratio,rr,cabinFare,investRate,ownRate,keep){
+  const grid=document.getElementById(prefix+'_breakeven');
+  const rrVal=document.getElementById(prefix+'_be_rr_val');
+  const rrHint=document.getElementById(prefix+'_be_rr_hint');
+  const thVal=document.getElementById(prefix+'_be_th_val');
+  const thHint=document.getElementById(prefix+'_be_th_hint');
+  const ivVal=document.getElementById(prefix+'_be_iv_val');
+  const ivHint=document.getElementById(prefix+'_be_iv_hint');
+  const kpVal=document.getElementById(prefix+'_be_kp_val');
+  const kpHint=document.getElementById(prefix+'_be_kp_hint');
+  const cls=result>=0?'positive':'negative';
+  let anyShow=false;
+
+  rrVal.textContent='—';rrVal.className='be-value';rrHint.textContent='';
+  thVal.textContent='—';thVal.className='be-value';thHint.textContent='';
+  ivVal.textContent='—';ivVal.className='be-value';ivHint.textContent='';
+  kpVal.textContent='—';kpVal.className='be-value';kpHint.textContent='';
+
+  // 退改比例盈亏点
+  if(Math.abs(perLoss)<0.005){
+    if(base*threshold>0){rrVal.textContent='任意';rrVal.classList.add('positive');rrHint.textContent='亏损为0均盈利';anyShow=true}
+  }else{
+    const denom=base*threshold+perLoss;
+    if(denom>0){const rrBE=(perLoss*100)/denom;if(rrBE>0&&rrBE<100){
+      rrVal.textContent=fmtR(rrBE)+'%';rrVal.classList.add(cls);rrHint.textContent='↑盈 ↓亏';anyShow=true
+    }}
+  }
+
+  // 阀值盈亏点
+  if(base>0.005&&totalLoss>0.005){
+    const thBE=totalLoss*100/base;
+    if(thBE>0&&thBE<=100){
+      thVal.textContent=fmtR(thBE)+'%';thVal.classList.add(cls);thHint.textContent='↑盈 ↓亏';anyShow=true
+    }
+  }
+
+  // 投放扣率盈亏点
+  if(ratio>0.005&&cabinFare>0.005){
+    const investBE=ownRate*100+(base*threshold/ratio+keep)*100/cabinFare;
+    if(investBE>=0&&investBE<=100){
+      ivVal.textContent=fmtR(investBE)+'%';ivVal.classList.add(cls);ivHint.textContent='↓盈 ↑亏';anyShow=true
+    }
+  }
+
+  // 留钱盈亏点：keep = cabinFare × (investRate - ownRate) - base × threshold / ratio
+  if(ratio>0.005){
+    const keepBE=cabinFare*(investRate-ownRate)-base*threshold/ratio;
+    kpVal.textContent=fmtR(keepBE);kpVal.classList.add(cls);kpHint.textContent='↑盈 ↓亏';anyShow=true
+  }
+
+  grid.classList.toggle('show',anyShow);
+}
+
+function copyResult(prefix,btn){
+  const result=document.getElementById(prefix+'_result').textContent;
+  const detail=document.getElementById(prefix+'_detail').innerText;
+  const title=prefix==='pub'?'公转私运价':'私有运价';
+  navigator.clipboard.writeText(`${title}\n计算结果：${result}\n\n${detail}`).catch(()=>{});
+  btn.textContent='已复制';btn.classList.add('copied');
+  setTimeout(()=>{btn.textContent='复制';btn.classList.remove('copied')},1000);
+}
+
+function valClass(n){return n<0?'step-val val-red':n>0?'step-val val-green':'step-val'}
+
+function calcPublic(){
+  const refund=getVal('pub_refund'),cabinFare=getVal('pub_cabin_fare');
+  const investRate=getVal('pub_invest_rate')/100,ownRate=getVal('pub_own_rate')/100;
+  const keep=getVal('pub_keep'),threshold=getThreshold('pub')/100;
+  const rr=getVal('pub_refund_rate'),tp=getThreshold('pub'),has=anyFilled('pub');
+  renderFormula('pub','退改客规');
+  showResult('pub',has);
+  const{profit,perLoss,totalLoss,result,ratio}=computeResult(refund,threshold,cabinFare,investRate,ownRate,keep,rr);
+  const el=document.getElementById('pub_result'),box=document.getElementById('pub_result_box');
+  el.textContent=fmt(result);el.className=resultClass(result);
+  box.className=resultBoxClass(result);
+  if(!has)box.classList.add('empty-state');
+  const keepOp=keep>=0?'−':'+',keepAbs=keep>=0?fmt(keep):fmt(Math.abs(keep));
+  const resultExpr=rr>0?(totalLoss<0?fmtS(profit)+' + '+fmtS(Math.abs(totalLoss)):fmtS(profit)+' − '+fmtS(totalLoss)):fmtS(profit)+' − 0.00';
+  const hasBase=hasVal('pub_refund');
+  const hasLoss=hasVal('pub_cabin_fare')||hasVal('pub_invest_rate')||hasVal('pub_own_rate')||hasVal('pub_keep');
+  const hasRR=hasVal('pub_refund_rate');
+  const hasTotal=hasRR&&hasLoss;
+  const hasResult=hasBase&&hasRR&&hasLoss;
+  const perLossLabel=Math.abs(perLoss)<0.005?'单票亏损':perLoss<-0.005?'单票利润':'单票亏损';
+  const perLossLabelCls=Math.abs(perLoss)<0.005?'step-label':perLoss<-0.005?'step-label label-green':'step-label label-red';
+  const totalLossLabel=Math.abs(totalLoss)<0.005?'总亏损':totalLoss<-0.005?'总利润':'总亏损';
+  const totalLossLabelCls=Math.abs(totalLoss)<0.005?'step-label':totalLoss<-0.005?'step-label label-green':'step-label label-red';
+  document.getElementById('pub_detail').innerHTML=
+    `<div class="step"><span class="${profit>0.005?'step-label label-green':'step-label'}">退票利润</span><span class="step-expr">${hasBase?fmt(refund)+' × '+tp+'%':''}</span><span class="${hasBase?valClass(profit):'step-val'}">${hasBase?fmtS(profit):'—'}</span></div>`+
+    `<div class="step"><span class="${perLossLabelCls}">${perLossLabel}</span><span class="step-expr">${hasLoss?fmt(cabinFare)+' × ('+getVal('pub_invest_rate')+'% − '+getVal('pub_own_rate')+'%) '+keepOp+' '+keepAbs:''}</span><span class="${hasLoss?lossClass(perLoss):'step-val'}">${hasLoss?fmtS(Math.abs(perLoss)):'—'}</span></div>`+
+    `<div class="step"><span class="step-label">非退改系数</span><span class="step-expr">${hasRR?'(100 − '+rr+') / '+(rr>0?rr:'—'):''}</span><span class="step-val">${hasRR?(rr>0?fmtR(ratio):'—'):'—'}</span></div>`+
+    `<div class="step"><span class="${totalLossLabelCls}">${totalLossLabel}</span><span class="step-expr">${hasTotal?fmtS(Math.abs(perLoss))+' × '+(rr>0?fmtR(ratio):'—'):''}</span><span class="${hasTotal&&rr>0?lossClass(totalLoss):'step-val'}">${hasTotal?(rr>0?fmtS(Math.abs(totalLoss)):'—'):'—'}</span></div>`+
+    `<div class="step step-result"><span class="step-label">结果</span><span class="step-expr">${hasResult?resultExpr:''}</span><span class="${hasResult?valClass(result):'step-val'}">${hasResult?fmtS(result):'—'}</span></div>`;
+  updateBreakeven('pub',refund,threshold,perLoss,totalLoss,result,ratio,rr,cabinFare,investRate,ownRate,keep);
+}
+
+function calcPrivate(){
+  const fare=getVal('pri_fare'),cabinFare=getVal('pri_cabin_fare');
+  const investRate=getVal('pri_invest_rate')/100,ownRate=getVal('pri_own_rate')/100;
+  const keep=getVal('pri_keep'),threshold=getThreshold('pri')/100;
+  const rr=getVal('pri_refund_rate'),tp=getThreshold('pri'),has=anyFilled('pri');
+  renderFormula('pri','公布票面','对应公布票面');
+  showResult('pri',has);
+  const{profit,perLoss,totalLoss,result,ratio}=computeResult(fare,threshold,cabinFare,investRate,ownRate,keep,rr);
+  const el=document.getElementById('pri_result'),box=document.getElementById('pri_result_box');
+  el.textContent=fmt(result);el.className=resultClass(result);
+  box.className=resultBoxClass(result);
+  if(!has)box.classList.add('empty-state');
+  const keepOp=keep>=0?'−':'+',keepAbs=keep>=0?fmt(keep):fmt(Math.abs(keep));
+  const resultExpr=rr>0?(totalLoss<0?fmtS(profit)+' + '+fmtS(Math.abs(totalLoss)):fmtS(profit)+' − '+fmtS(totalLoss)):fmtS(profit)+' − 0.00';
+  const hasBase=hasVal('pri_fare');
+  const hasLoss=hasVal('pri_cabin_fare')||hasVal('pri_invest_rate')||hasVal('pri_own_rate')||hasVal('pri_keep');
+  const hasRR=hasVal('pri_refund_rate');
+  const hasTotal=hasRR&&hasLoss;
+  const hasResult=hasBase&&hasRR&&hasLoss;
+  const perLossLabel=Math.abs(perLoss)<0.005?'单票亏损':perLoss<-0.005?'单票利润':'单票亏损';
+  const perLossLabelCls=Math.abs(perLoss)<0.005?'step-label':perLoss<-0.005?'step-label label-green':'step-label label-red';
+  const totalLossLabel=Math.abs(totalLoss)<0.005?'总亏损':totalLoss<-0.005?'总利润':'总亏损';
+  const totalLossLabelCls=Math.abs(totalLoss)<0.005?'step-label':totalLoss<-0.005?'step-label label-green':'step-label label-red';
+  document.getElementById('pri_detail').innerHTML=
+    `<div class="step"><span class="${profit>0.005?'step-label label-green':'step-label'}">退票利润</span><span class="step-expr">${hasBase?fmt(fare)+' × '+tp+'%':''}</span><span class="${hasBase?valClass(profit):'step-val'}">${hasBase?fmtS(profit):'—'}</span></div>`+
+    `<div class="step"><span class="${perLossLabelCls}">${perLossLabel}</span><span class="step-expr">${hasLoss?fmt(cabinFare)+' × ('+getVal('pri_invest_rate')+'% − '+getVal('pri_own_rate')+'%) '+keepOp+' '+keepAbs:''}</span><span class="${hasLoss?lossClass(perLoss):'step-val'}">${hasLoss?fmtS(Math.abs(perLoss)):'—'}</span></div>`+
+    `<div class="step"><span class="step-label">非退改系数</span><span class="step-expr">${hasRR?'(100 − '+rr+') / '+(rr>0?rr:'—'):''}</span><span class="step-val">${hasRR?(rr>0?fmtR(ratio):'—'):'—'}</span></div>`+
+    `<div class="step"><span class="${totalLossLabelCls}">${totalLossLabel}</span><span class="step-expr">${hasTotal?fmtS(Math.abs(perLoss))+' × '+(rr>0?fmtR(ratio):'—'):''}</span><span class="${hasTotal&&rr>0?lossClass(totalLoss):'step-val'}">${hasTotal?(rr>0?fmtS(Math.abs(totalLoss)):'—'):'—'}</span></div>`+
+    `<div class="step step-result"><span class="step-label">结果</span><span class="step-expr">${hasResult?resultExpr:''}</span><span class="${hasResult?valClass(result):'step-val'}">${hasResult?fmtS(result):'—'}</span></div>`;
+  updateBreakeven('pri',fare,threshold,perLoss,totalLoss,result,ratio,rr,cabinFare,investRate,ownRate,keep);
+}
+
+function resetPublic(){
+  const btn=document.querySelector('.card:first-child .btn-reset');
+  btn.classList.add('resetting');setTimeout(()=>btn.classList.remove('resetting'),400);
+  ['pub_refund','pub_cabin_fare','pub_keep','pub_refund_rate','pub_invest_rate','pub_own_rate'].forEach(id=>{document.getElementById(id).value=''});
+  document.getElementById('pub_rr_error').classList.remove('show');
+  document.getElementById('pub_refund_rate').classList.remove('input-error');
+  setThreshold('pub','default');
+  calcPublic();
+}
+function resetPrivate(){
+  const btn=document.querySelector('.card:last-child .btn-reset');
+  btn.classList.add('resetting');setTimeout(()=>btn.classList.remove('resetting'),400);
+  ['pri_fare','pri_cabin_fare','pri_keep','pri_refund_rate','pri_invest_rate','pri_own_rate'].forEach(id=>{document.getElementById(id).value=''});
+  document.getElementById('pri_rr_error').classList.remove('show');
+  document.getElementById('pri_refund_rate').classList.remove('input-error');
+  setThreshold('pri','default');
+  calcPrivate();
+}
+function resetAll(){
+  const btn=document.querySelector('.btn-reset-all');
+  btn.classList.add('resetting');setTimeout(()=>btn.classList.remove('resetting'),400);
+  resetPublic();resetPrivate();
+}
+
+document.querySelectorAll('.fields').forEach(grid=>{
+  grid.addEventListener('keydown',function(e){
+    if(e.key!=='Enter')return;
+    const inputs=Array.from(grid.querySelectorAll('input:not([readonly])'));
+    const idx=inputs.indexOf(e.target);
+    if(idx>=0&&idx<inputs.length-1){e.preventDefault();inputs[idx+1].focus()}
+  });
+});
+
+try{localStorage.removeItem('calc_persist')}catch(e){}
+
+const STEP10_IDS=['pub_refund','pub_cabin_fare','pri_fare','pri_cabin_fare'];
+const THRESHOLD_IDS=['pub_threshold_val','pri_threshold_val'];
+document.querySelectorAll('.field input[type="number"]').forEach(input=>{
+  input.addEventListener('wheel',function(e){
+    e.preventDefault();
+    const step=STEP10_IDS.includes(this.id)?10:1;
+    const dir=e.deltaY<0?1:-1;
+    const cur=parseFloat(this.value)||0;
+    this.value=cur+dir*step;
+    this.dispatchEvent(new Event('input'));
+  },{passive:false});
+});
+THRESHOLD_IDS.forEach(id=>{
+  const input=document.getElementById(id);
+  input.addEventListener('wheel',function(e){
+    e.preventDefault();
+    const dir=e.deltaY<0?1:-1;
+    const cur=parseFloat(this.value)||0;
+    this.value=cur+dir*1;
+    this.dispatchEvent(new Event('input'));
+  },{passive:false});
+});
+
+calcPublic();calcPrivate();
+</script>
+</body>
+</html>
