@@ -571,7 +571,7 @@ function renderFormula(prefix,baseLabel,cabinLabel){
   cabinLabel=cabinLabel||'公布票面';
   document.getElementById(prefix+'_formula').innerHTML=
     `<div class="formula-desc">`+
-    `${baseLabel} <span class="fd-op">*</span> 阀值 <span class="fd-op">−</span> [${cabinLabel} <span class="fd-op">×</span> (投放扣率 <span class="fd-op">−</span> 自家扣率) <span class="fd-op">+</span> 留钱] <span class="fd-op">×</span> 非退改系数`+
+    `${baseLabel} <span class="fd-op">×</span> 阀值 <span class="fd-op">−</span> [${cabinLabel} <span class="fd-op">×</span> (投放扣率 <span class="fd-op">−</span> 自家扣率) <span class="fd-op">+</span> 留钱] <span class="fd-op">×</span> 非退改系数`+
     `</div>`;
 }
 
