@@ -46,7 +46,6 @@
     --s-result: 0 2px 6px rgba(0,0,0,0.03), 0 10px 30px rgba(0,0,0,0.06);
     --pill: 20px; --pill-sm: 15px; --gap: 14px;
     --ease: cubic-bezier(0.4, 0, 0.2, 1);
-    --theme-icon-deg: 0deg;
   }
 
   /* ── Dark Mode ── */
@@ -85,7 +84,6 @@
     --s-md: 0 2px 8px rgba(0,0,0,0.15), 0 12px 32px rgba(0,0,0,0.12);
     --s-lg: 0 4px 16px rgba(0,0,0,0.15), 0 20px 48px rgba(0,0,0,0.15);
     --s-result: 0 2px 6px rgba(0,0,0,0.10), 0 10px 30px rgba(0,0,0,0.12);
-    --theme-icon-deg: 180deg;
   }
 
   *{margin:0;padding:0;box-sizing:border-box}
@@ -101,18 +99,33 @@
   .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
   h1{font-size:24px;font-weight:700;letter-spacing:-0.5px;color:var(--text)}
   .header-actions{display:flex;align-items:center;gap:8px}
-  .btn-theme{
-    width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--card);
-    cursor:pointer;display:flex;align-items:center;justify-content:center;
-    transition:all .15s var(--ease);box-shadow:var(--s-xs);color:var(--text-sub);
-    position:relative;overflow:hidden;
+  .theme-toggle{
+    width:64px;height:32px;padding:4px;border-radius:var(--pill);border:1px solid var(--border);
+    background:var(--card);cursor:pointer;display:flex;align-items:center;position:relative;overflow:hidden;
+    transition:background .25s var(--ease),border-color .25s var(--ease),box-shadow .15s var(--ease);
+    box-shadow:var(--s-xs);color:var(--text-sub);
   }
-  .btn-theme:hover{border-color:var(--border-hover);box-shadow:var(--s-sm);color:var(--text)}
-  .btn-theme:active{transform:scale(0.92);box-shadow:var(--s-xs)}
-  .btn-theme svg{
-    width:18px;height:18px;transition:transform .3s var(--ease),opacity .2s var(--ease);
-    transform:rotate(var(--theme-icon-deg));
+  .theme-toggle:hover{border-color:var(--border-hover);box-shadow:var(--s-sm);color:var(--text)}
+  .theme-toggle:active{transform:scale(.96);box-shadow:var(--s-xs)}
+  .theme-toggle-track{display:flex;align-items:center;justify-content:space-between;width:100%;position:relative}
+  .theme-option{
+    width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    transition:color .25s var(--ease),transform .25s var(--ease),opacity .25s var(--ease);
+    position:relative;z-index:1;
   }
+  .theme-option svg{width:15px;height:15px;stroke-width:1.7}
+  .theme-thumb{
+    position:absolute;left:0;top:0;width:24px;height:24px;border-radius:50%;
+    background:var(--card-deep);z-index:0;
+    transition:transform .3s var(--ease),background .25s var(--ease);
+  }
+  [data-theme="light"] .theme-thumb{transform:translateX(32px);background:var(--card-deep)}
+  [data-theme="light"] .theme-sun{color:var(--text)}
+  [data-theme="light"] .theme-moon{color:var(--text-dim)}
+  [data-theme="dark"] .theme-toggle{background:#111217;border-color:#2d2e3a}
+  [data-theme="dark"] .theme-thumb{transform:translateX(0);background:#2a2b38}
+  [data-theme="dark"] .theme-moon{color:#f8fafc}
+  [data-theme="dark"] .theme-sun{color:#6b7280}
   .btn-reset-all{
     background:var(--card);border:1px solid var(--border);border-radius:var(--pill-sm);
     padding:7px 20px;font-size:13px;color:var(--text-sub);cursor:pointer;
@@ -382,10 +395,21 @@
   <div class="page-header">
     <h1>投放策略计算器</h1>
     <div class="header-actions">
-      <button class="btn-theme" onclick="toggleTheme()" title="切换主题" aria-label="切换主题">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-        </svg>
+      <button class="theme-toggle" onclick="toggleTheme()" title="切换主题" aria-label="切换主题" aria-pressed="false">
+        <span class="theme-toggle-track" aria-hidden="true">
+          <span class="theme-thumb"></span>
+          <span class="theme-option theme-moon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3a6.5 6.5 0 0 0 8.8 8.8A8.5 8.5 0 1 1 12 3Z"/>
+            </svg>
+          </span>
+          <span class="theme-option theme-sun">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+            </svg>
+          </span>
+        </span>
       </button>
       <button class="btn-reset-all" onclick="resetAll()">全部重置</button>
     </div>
@@ -537,6 +561,8 @@ function getPreferredTheme(){
 }
 function applyTheme(theme){
   document.documentElement.setAttribute('data-theme',theme);
+  const btn=document.querySelector('.theme-toggle');
+  if(btn)btn.setAttribute('aria-pressed',theme==='dark'?'true':'false');
 }
 function toggleTheme(){
   const current=document.documentElement.getAttribute('data-theme')||'light';
